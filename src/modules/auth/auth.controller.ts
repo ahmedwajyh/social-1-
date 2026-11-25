@@ -2,6 +2,7 @@ import express, { type Request } from "express";
 
 import AuthService from "./auth.service.js";
 import UserService from "../user/user.service.js";
+
 import { responseFormatter } from "../../middleware/response.middleware.js";
 import { Validation } from "../../middleware/validation.middleware.js";
 
@@ -20,12 +21,11 @@ import {
 import { authentication } from "./auth.middleware.js";
 
 import upload from "../../middleware/multer.cloud.js";
-
+import uploadFiles from "../../middleware/multer.files.js";
+import uploadLarge from "../../middleware/multer.large.js";
 
 import { StoreEnum } from "../../common/service/store.enum.js";
 import { S3Service } from "../../common/service/s3.service.js";
-import uploadFiles from "../../middleware/multer.files.js";
-import uploadLarge from "../../middleware/multer.large.js";
 
 const router = express.Router({
     strict: true,
@@ -265,7 +265,6 @@ router.delete(
     })
 );
 
-
 // Upload Single File
 router.post(
     "/upload-file",
@@ -385,6 +384,162 @@ router.get(
                 url,
             },
             extra: "Download URL generated successfully",
+        };
+    })
+);
+
+// Create Signed URL
+router.post(
+    "/create-url",
+    authentication,
+    responseFormatter(async (req: Request) => {
+        const userId = getUserId(req);
+        const { key } = req.body;
+
+        if (!key || typeof key !== "string") {
+            throw new Error("File key is required");
+        }
+
+        if (!key.startsWith(`Users/${userId}/`)) {
+            throw new UnauthorizedException(
+                "You are not allowed to access this file"
+            );
+        }
+
+        const url = await s3Service.getSignedUrl(key, 3600);
+
+        return {
+            status: 200,
+            data: {
+                key,
+                url,
+                expiresIn: 3600,
+            },
+            extra: "Signed URL created successfully",
+        };
+    })
+);
+
+// ========================================
+// Get Files
+// ========================================
+router.get(
+    "/get-files",
+    authentication,
+    responseFormatter(async (req: Request) => {
+        const userId = getUserId(req);
+
+        const result = await s3Service.getFiles({
+            path: `Users/${userId}/Files`,
+        });
+
+        return {
+            status: 200,
+            data: result,
+            extra: "Files retrieved successfully",
+        };
+    })
+);
+
+// ========================================
+// Delete Single File
+// ========================================
+router.delete(
+    "/delete-file",
+    authentication,
+    responseFormatter(async (req: Request) => {
+        const userId = getUserId(req);
+        const { key } = req.body;
+
+        if (!key || typeof key !== "string") {
+            throw new Error("File key is required");
+        }
+
+        if (!key.startsWith(`Users/${userId}/`)) {
+            throw new UnauthorizedException(
+                "You are not allowed to delete this file"
+            );
+        }
+
+        await s3Service.deleteFile(key);
+
+        return {
+            status: 200,
+            data: null,
+            extra: "File deleted successfully",
+        };
+    })
+);
+
+// ========================================
+// Delete Multiple Files
+// ========================================
+router.delete(
+    "/delete-files",
+    authentication,
+    responseFormatter(async (req: Request) => {
+        const userId = getUserId(req);
+        const { keys } = req.body;
+
+        if (!Array.isArray(keys) || keys.length === 0) {
+            throw new Error("Files keys are required");
+        }
+
+        const userPrefix = `Users/${userId}/`;
+
+        const isValid = keys.every(
+            (key: unknown) =>
+                typeof key === "string" &&
+                key.startsWith(userPrefix)
+        );
+
+        if (!isValid) {
+            throw new UnauthorizedException(
+                "You are not allowed to delete these files"
+            );
+        }
+
+        await s3Service.deleteFiles(keys);
+
+        return {
+            status: 200,
+            data: null,
+            extra: "Files deleted successfully",
+        };
+    })
+);
+
+// ========================================
+// Delete Folder
+// ========================================
+router.delete(
+    "/delete-folder",
+    authentication,
+    responseFormatter(async (req: Request) => {
+        const userId = getUserId(req);
+        const { folder } = req.body;
+
+        if (!folder || typeof folder !== "string") {
+            throw new Error("Folder is required");
+        }
+
+        const userPrefix = `Users/${userId}/`;
+
+        if (
+            !folder.startsWith(userPrefix) ||
+            folder.replace(/\/+$/, "") === `Users/${userId}`
+        ) {
+            throw new UnauthorizedException(
+                "You are not allowed to delete this folder"
+            );
+        }
+
+        await s3Service.deleteFolder(folder);
+
+        return {
+            status: 200,
+            data: null,
+            extra: "Folder deleted successfully",
         };
     })
 );
