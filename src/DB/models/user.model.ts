@@ -53,7 +53,8 @@ const userSchema = new mongoose.Schema<Iuser>({
     },
     age: {
         type: Number,
-        required: false
+        required: false,
+        min:20,
     },
     phone: {
         type: String,
@@ -125,6 +126,30 @@ userSchema.pre("save", async function () {
 
     this.password = await bcrypt.hash(this.password, 12);
 });
+// userSchema.pre("save",function () {
+//     console.log("=====pre save=================");
+    
+    
+// })
+// userSchema.post("save",function () {
+//     console.log("=====pre post=================");
+    
+    
+// })
+
+userSchema.pre("validate",function () {
+    console.log("=====pre validate=================");
+    console.log(this);
+    // if (this.age < 20){
+    //    throw new Error("age less more ")};
+});
+userSchema.post("validate",function () {
+    console.log("=====post validate=================");
+    console.log(this);
+    
+    
+    
+})
 
 export const userModel =
     (mongoose.models.User as mongoose.Model<Iuser>) ||

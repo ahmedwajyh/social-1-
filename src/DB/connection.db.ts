@@ -7,5 +7,6 @@ export const connectionDB = async (): Promise<void> => {
     }
 
     await mongoose.connect(DB_URI);
-    console.log("Database connected successfully.");
+    console.log("Database connected successfully😍");
+    
 };

@@ -41,7 +41,7 @@ export const bootstrap = async () => {
     app.use(limiter);
 
     app.get("/", (req: Request, res: Response) => {
-        res.status(200).json({ message: "Welcome to Social App", status: 200 });
+        res.status(200).json({ message: "Welcome to Social App by ahmed wageeh", status: 200 });
     });
 
     app.use("/auth", authRouter);
@@ -55,7 +55,7 @@ export const bootstrap = async () => {
     app.use(globalError);
 
     const server = app.listen(PORT, () => {
-        console.log(`Social App is listening on port ${PORT}.`);
+        console.log(`Social App is listening on port ${PORT} 🙌`);
     });
 
     return server;

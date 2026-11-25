@@ -29,7 +29,7 @@ export class RedisService {
 
         if (!this.redis_client.isOpen) {
             await this.redis_client.connect();
-            console.log("Redis connected successfully.");
+            console.log("Redis connected successfully😘");
         }
     }
 
