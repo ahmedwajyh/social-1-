@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import { config } from "dotenv";
+import { preprocess } from "zod";
 
 export const NODE_ENV: string = process.env.NODE_ENV ?? "development";
 
@@ -22,7 +23,9 @@ export const WEB_CLIENT_ID: string = process.env.WEB_CLIENT_ID ?? "";
 export const SMTP_EMAIL: string = process.env.APP_EMAIL || process.env.SMTP_EMAIL || "";
 export const EMAIL_PASS: string = process.env.APP_PASSWORD || process.env.EMAIL_PASS || "";
 export const PROJECT_NAME: string = process.env.PROJECT_NAME || "Social App";
-
+export const AWS_REGION=process.env.AWS_REGION;
+export const AWS_ACCESS_KEY=process.env.AWS_ACCESS_KEY;
+export const AWS_SECRET_ACCESS_KEY=process.env.AWS_SECRET_ACCESS_KEY;
 export const ALLOWED_ORIGINS: string[] = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim()).filter(Boolean)
     : ["*"];
@@ -53,3 +56,4 @@ export const validateRuntimeConfig = (): void => {
         throw new Error("PORT must be a valid TCP port number.");
     }
 };
+
